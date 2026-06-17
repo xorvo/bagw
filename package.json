@@ -1,0 +1,27 @@
+{
+  "name": "bagw",
+  "version": "0.1.0",
+  "description": "Browser Agent Gateway — a local service that lets browser extensions and local apps run your installed AI coding agents (Claude Code, etc.) using your existing config, with per-client approval.",
+  "type": "module",
+  "bin": {
+    "bagw": "bin/bagw.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node bin/bagw.mjs start"
+  },
+  "keywords": ["claude", "claude-code", "agent", "gateway", "browser-extension", "bedrock"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xorvo/bagw.git"
+  }
+}
