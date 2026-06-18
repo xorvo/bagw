@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { loadConfig } from "../src/config.mjs";
 import { start, VERSION } from "../src/server.mjs";
 import { install, uninstall } from "../src/service.mjs";
+import { augmentPath, which, loginShellPath } from "../src/env.mjs";
 import * as store from "../src/store.mjs";
 
 const [cmd, ...rest] = process.argv.slice(2);
@@ -37,6 +38,7 @@ Usage: bagw <command>
   install            Install + start as a login service (macOS launchd)
   uninstall          Remove the login service
   status             Show whether bagw is running and list clients
+  doctor             Check PATH + that each agent's binary can be found
   clients [--pending]  List approved clients (or pending pairing requests)
   approve <code>     Approve a pending pairing request (e.g. bagw approve A1B2-C3D4)
   deny <code>        Deny a pending pairing request
@@ -64,6 +66,20 @@ switch (cmd) {
   case "status":
     await status(config);
     break;
+  case "doctor": {
+    const before = process.env.PATH || "";
+    augmentPath();
+    console.log(`shell: ${process.env.SHELL || "(unset, defaulting to /bin/zsh)"}`);
+    console.log(`login-shell PATH resolved: ${loginShellPath() ? "yes" : "no (using fallback dirs)"}`);
+    console.log(`PATH augmented: ${process.env.PATH !== before ? "yes" : "no change"}`);
+    console.log("agents:");
+    for (const [id, def] of Object.entries(config.agents)) {
+      const bin = def.bin || (Array.isArray(def.command) ? def.command[0] : "(none)");
+      const found = which(bin);
+      console.log(`  ${id} (${def.type}): ${bin} -> ${found || "NOT FOUND"}`);
+    }
+    break;
+  }
   case "clients": {
     if (rest.includes("--pending")) {
       const pend = store.listPending(config.pendingTtlMs);

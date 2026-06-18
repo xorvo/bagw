@@ -4,6 +4,7 @@ import { LOG_FILE } from "./paths.mjs";
 import * as store from "./store.mjs";
 import { showApprovalDialog, canShowDialog } from "./approve.mjs";
 import { runAgent, listAgents } from "./agents.mjs";
+import { augmentPath, which } from "./env.mjs";
 
 const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 export const VERSION = pkg.version;
@@ -180,11 +181,24 @@ export function createServer(config) {
 }
 
 export function start(config) {
+  // Make spawned agent CLIs findable even under launchd's minimal PATH.
+  augmentPath();
+
   const server = createServer(config);
   server.listen(config.port, config.host, () => {
     log(`START listening on ${config.host}:${config.port}`);
     console.log(`bagw ${VERSION} listening at http://${config.host}:${config.port}`);
     console.log(`Agents: ${listAgents(config).join(", ")}`);
+
+    // Warn loudly if a configured agent's binary can't be found.
+    for (const [id, def] of Object.entries(config.agents)) {
+      const bin = def.bin || (Array.isArray(def.command) ? def.command[0] : null);
+      if (bin && !which(bin)) {
+        const msg = `WARNING: agent "${id}" binary "${bin}" not found on PATH.`;
+        console.warn(msg);
+        log(msg);
+      }
+    }
     console.log(`Approve new clients via the macOS dialog, or: bagw approve <code>`);
   });
   return server;

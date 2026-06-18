@@ -1,6 +1,6 @@
 {
   "name": "bagw",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser Agent Gateway — a local service that lets browser extensions and local apps run your installed AI coding agents (Claude Code, etc.) using your existing config, with per-client approval.",
   "type": "module",
   "bin": {
