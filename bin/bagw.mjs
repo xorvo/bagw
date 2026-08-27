@@ -2,7 +2,9 @@
 // bagw — Browser Agent Gateway CLI.
 
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 import { loadConfig } from "../src/config.mjs";
+import { CONFIG_FILE, STATE_DIR } from "../src/paths.mjs";
 import { start, VERSION } from "../src/server.mjs";
 import { install, uninstall } from "../src/service.mjs";
 import { augmentPath, which, loginShellPath } from "../src/env.mjs";
@@ -46,8 +48,12 @@ Usage: bagw <command>
   help               Show this help
   version            Print version
 
-Config + state live in ~/.bagw/. The gateway runs your installed agents
-(Claude Code by default) in a locked-down, no-tools, single-turn mode.`);
+Config lives in ${CONFIG_FILE}
+State (client tokens, log) in ${STATE_DIR}
+Set BAGW_DIR to keep both in one directory instead.
+
+The gateway runs your installed agents (Claude Code by default) in a
+locked-down, no-tools, single-turn mode.`);
 }
 
 const config = loadConfig();
@@ -69,6 +75,8 @@ switch (cmd) {
   case "doctor": {
     const before = process.env.PATH || "";
     augmentPath();
+    console.log(`config: ${CONFIG_FILE}${existsSync(CONFIG_FILE) ? "" : "  (not created yet)"}`);
+    console.log(`state:  ${STATE_DIR}`);
     console.log(`shell: ${process.env.SHELL || "(unset, defaulting to /bin/zsh)"}`);
     console.log(`login-shell PATH resolved: ${loginShellPath() ? "yes" : "no (using fallback dirs)"}`);
     console.log(`PATH augmented: ${process.env.PATH !== before ? "yes" : "no change"}`);

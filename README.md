@@ -70,7 +70,7 @@ bagw status               # is it running? how many clients?
   website can neither read responses nor make authenticated calls.
 - **Explicit per-client approval** — every client must be approved by you once;
   each gets its own token (stored only as a SHA-256 hash). All use is logged
-  (`~/.bagw/bagw.log`) and revocable; there's a per-client rate limit.
+  (`bagw.log` in the state directory) and revocable; there's a per-client rate limit.
 - **Locked-down execution (blast-radius containment)** — agents run
   **completion-only**: no tools, single turn, and a temp working directory. Even an
   approved-then-misused client can only generate text and spend tokens — it
@@ -101,9 +101,21 @@ poll `GET /pair/:pairingId` until `status === "approved"` → store the returned
 directory. A path outside `cwdRoots` (or a missing one) comes back `400` with a
 message you can show the user — it is not a server error.
 
+## Where things live
+
+| What | Path | Override |
+|---|---|---|
+| Config | `~/.config/bagw/config.json` | `XDG_CONFIG_HOME` |
+| Client tokens + log | `~/.local/state/bagw/` | `XDG_STATE_HOME` |
+
+Config is separate from state on purpose: one is worth backing up, the other is
+per-machine secrets. `BAGW_DIR` puts both in a single directory instead, and if you
+already have a `~/.bagw` from an earlier version it keeps being used as-is — nothing
+to migrate, no re-pairing. `bagw doctor` prints the resolved paths.
+
 ## Adding other agents
 
-Agents are adapters defined in `~/.bagw/config.json`:
+Agents are adapters defined in `config.json`:
 
 ```json
 {

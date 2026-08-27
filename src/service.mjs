@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { SERVICE_LABEL, LOG_FILE, DIR } from "./paths.mjs";
+import { SERVICE_LABEL, LOG_FILE, STATE_DIR } from "./paths.mjs";
 
 function plistPath() {
   return join(homedir(), "Library", "LaunchAgents", `${SERVICE_LABEL}.plist`);
@@ -35,7 +35,7 @@ export function install(scriptPath) {
     );
     return false;
   }
-  mkdirSync(DIR, { recursive: true });
+  mkdirSync(STATE_DIR, { recursive: true });
   mkdirSync(join(homedir(), "Library", "LaunchAgents"), { recursive: true });
 
   const plist = `<?xml version="1.0" encoding="UTF-8"?>

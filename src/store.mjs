@@ -16,10 +16,10 @@ import {
   chmodSync,
 } from "node:fs";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { DIR, CLIENTS_FILE } from "./paths.mjs";
+import { STATE_DIR, CLIENTS_FILE } from "./paths.mjs";
 
 function ensureDir() {
-  mkdirSync(DIR, { recursive: true });
+  mkdirSync(STATE_DIR, { recursive: true });
 }
 
 function read() {
