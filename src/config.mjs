@@ -14,7 +14,7 @@ import { CONFIG_FILE } from "./paths.mjs";
 // }
 export const DEFAULT_CONFIG = {
   host: "127.0.0.1", // never change to 0.0.0.0 — keeps bagw off the network
-  port: 8765,
+  port: 8791,
   defaultAgent: "claude",
   rateLimitPerMin: 60, // per approved client
   pendingTtlMs: 5 * 60 * 1000,
