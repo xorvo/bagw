@@ -1,6 +1,6 @@
 import http from "node:http";
 import { appendFileSync, readFileSync } from "node:fs";
-import { LOG_FILE } from "./paths.mjs";
+import { LOG_FILE, legacyDirWarning } from "./paths.mjs";
 import * as store from "./store.mjs";
 import { showApprovalDialog, canShowDialog } from "./approve.mjs";
 import { runAgent, listAgents } from "./agents.mjs";
@@ -193,6 +193,12 @@ export function start(config) {
     log(`START listening on ${config.host}:${config.port}`);
     console.log(`bagw ${VERSION} listening at http://${config.host}:${config.port}`);
     console.log(`Agents: ${listAgents(config).join(", ")}`);
+
+    const legacy = legacyDirWarning();
+    if (legacy) {
+      console.warn(legacy);
+      log(legacy.split("\n")[0]);
+    }
 
     // Warn loudly if a configured agent's binary can't be found.
     for (const [id, def] of Object.entries(config.agents)) {

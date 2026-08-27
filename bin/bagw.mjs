@@ -4,7 +4,7 @@
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { loadConfig } from "../src/config.mjs";
-import { CONFIG_FILE, STATE_DIR } from "../src/paths.mjs";
+import { CONFIG_FILE, STATE_DIR, legacyDirWarning } from "../src/paths.mjs";
 import { start, VERSION } from "../src/server.mjs";
 import { install, uninstall } from "../src/service.mjs";
 import { augmentPath, which, loginShellPath } from "../src/env.mjs";
@@ -77,6 +77,8 @@ switch (cmd) {
     augmentPath();
     console.log(`config: ${CONFIG_FILE}${existsSync(CONFIG_FILE) ? "" : "  (not created yet)"}`);
     console.log(`state:  ${STATE_DIR}`);
+    const legacy = legacyDirWarning();
+    if (legacy) console.warn(legacy);
     console.log(`shell: ${process.env.SHELL || "(unset, defaulting to /bin/zsh)"}`);
     console.log(`login-shell PATH resolved: ${loginShellPath() ? "yes" : "no (using fallback dirs)"}`);
     console.log(`PATH augmented: ${process.env.PATH !== before ? "yes" : "no change"}`);

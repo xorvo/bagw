@@ -109,9 +109,20 @@ message you can show the user — it is not a server error.
 | Client tokens + log | `~/.local/state/bagw/` | `XDG_STATE_HOME` |
 
 Config is separate from state on purpose: one is worth backing up, the other is
-per-machine secrets. `BAGW_DIR` puts both in a single directory instead, and if you
-already have a `~/.bagw` from an earlier version it keeps being used as-is — nothing
-to migrate, no re-pairing. `bagw doctor` prints the resolved paths.
+per-machine secrets. `BAGW_DIR` puts both in a single directory instead.
+`bagw doctor` prints the resolved paths.
+
+Upgrading from 0.3.x or earlier, which used `~/.bagw`? Move the files once — bagw
+warns on startup until you do, and pairings survive because `clients.json` moves
+with them:
+
+```bash
+brew services stop bagw
+mkdir -p ~/.config/bagw ~/.local/state/bagw
+mv ~/.bagw/config.json ~/.config/bagw/
+mv ~/.bagw/clients.json ~/.bagw/bagw.log ~/.local/state/bagw/
+rmdir ~/.bagw && brew services start bagw
+```
 
 ## Adding other agents
 
