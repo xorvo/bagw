@@ -10,9 +10,9 @@ it once; any extension can then ask it to run an agent — but only after **you
 explicitly approve that extension**.
 
 ```
-extension ──POST /invoke (per-client token)──▶ bagw ──spawns──▶ claude (your config) ──▶ Bedrock / Anthropic / …
-                         ▲
-              one-time approval dialog
+extension ──POST /invoke (per-client token)──▶ bagw ──spawns──▶ claude / codex (your config) ──▶ Bedrock / Anthropic / …
+                         ▲                             in a temp dir, or a
+              one-time approval dialog                 cwd you allowed
 ```
 
 ## Why
@@ -72,9 +72,14 @@ bagw status               # is it running? how many clients?
   each gets its own token (stored only as a SHA-256 hash). All use is logged
   (`~/.bagw/bagw.log`) and revocable; there's a per-client rate limit.
 - **Locked-down execution (blast-radius containment)** — agents run
-  **completion-only**: no tools, single turn, neutral working directory. Even an
+  **completion-only**: no tools, single turn, and a temp working directory. Even an
   approved-then-misused client can only generate text and spend tokens — it
   **cannot** make the agent run shell commands, edit files, or touch your repos.
+- **Working directories are opt-in** — a client may ask to run in a directory via
+  `cwd`, but only inside the `cwdRoots` you configure; with none set (the default)
+  any such request is refused. Both the request and your roots are resolved with
+  `realpath` before comparison, so `..` and symlinks can't leave an allowed root.
+  Granting a root does widen blast radius: an agent with tools can read files there.
 - **Honest limit** — software already running as your user can read your files and
   could run `claude` itself; no local daemon can defend against that. `bagw` blocks
   *browser/web* and *unapproved* callers and contains blast radius.
@@ -86,11 +91,15 @@ bagw status               # is it running? how many clients?
 | `GET` | `/health` | none | `{ ok, service, version, agents }` |
 | `POST` | `/pair` | none | `{ name, agent? }` → `{ pairingId, code, approval, message }` |
 | `GET` | `/pair/:pairingId` | none | `{ status: "pending"\|"approved"\|"denied"\|"unknown", token? }` (token returned once) |
-| `POST` | `/invoke` | `Authorization: Bearer <token>` | `{ agent?, system, user, model? }` → `{ ok, text, agent }` |
+| `POST` | `/invoke` | `Authorization: Bearer <token>` | `{ agent?, system, user, model?, cwd? }` → `{ ok, text, agent }` |
 
 Pairing flow for a client: `POST /pair` → show the user the approval message →
 poll `GET /pair/:pairingId` until `status === "approved"` → store the returned
 `token` → call `/invoke` with it.
+
+`cwd` is an absolute path to run the agent in. Omit it and the agent runs in a temp
+directory. A path outside `cwdRoots` (or a missing one) comes back `400` with a
+message you can show the user — it is not a server error.
 
 ## Adding other agents
 
@@ -99,8 +108,10 @@ Agents are adapters defined in `~/.bagw/config.json`:
 ```json
 {
   "defaultAgent": "claude",
+  "cwdRoots": ["~/projects"],
   "agents": {
     "claude": { "type": "claude-code", "bin": "claude" },
+    "codex":  { "type": "command", "command": ["codex", "exec", "--skip-git-repo-check", "-m", "{model}"] },
     "mycli":  { "type": "command", "command": ["mycli", "--quiet", "--model", "{model}"] }
   }
 }
@@ -109,7 +120,14 @@ Agents are adapters defined in `~/.bagw/config.json`:
 - `claude-code` — runs Claude Code locked down (`-p --tools "" --max-turns 1
   --setting-sources user --system-prompt …`).
 - `command` — any CLI that reads a prompt on stdin and prints text on stdout;
-  `{model}` is substituted, `resultJsonPath` optionally extracts a field.
+  `{model}` is substituted, `resultJsonPath` optionally extracts a field. A blank
+  model drops the placeholder *and* the flag in front of it, so `-m {model}` won't
+  leave a dangling `-m`.
+- `cwdRoots` — directories clients may request via `cwd` (`~` is expanded). Empty
+  or absent means no client can pick a working directory.
+
+Use an absolute path for `bin`/`command[0]` if the CLI lives somewhere launchd
+can't see (a version-manager shim, say). `bagw doctor` reports what resolves.
 
 Callers pick an agent via the `agent` field on `/invoke` (defaults to `defaultAgent`).
 

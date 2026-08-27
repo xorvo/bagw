@@ -1,6 +1,6 @@
 {
   "name": "bagw",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Browser Agent Gateway — a local service that lets browser extensions and local apps run your installed AI coding agents (Claude Code, etc.) using your existing config, with per-client approval.",
   "type": "module",
   "bin": {
@@ -16,7 +16,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "start": "node bin/bagw.mjs start"
+    "start": "node bin/bagw.mjs start",
+    "test": "node test/cwd.test.mjs"
   },
   "keywords": ["claude", "claude-code", "agent", "gateway", "browser-extension", "bedrock"],
   "license": "MIT",

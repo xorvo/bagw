@@ -165,13 +165,17 @@ export function createServer(config) {
           system: body.system || "",
           user: body.user,
           model: body.model || "",
+          cwd: body.cwd || "",
         });
         store.recordUse(client.id, new Date().toISOString());
-        log(`INVOKE ok client="${client.name}" agent=${agent} ${Date.now() - started}ms`);
+        log(
+          `INVOKE ok client="${client.name}" agent=${agent}` +
+            `${body.cwd ? ` cwd=${body.cwd}` : ""} ${Date.now() - started}ms`
+        );
         send(res, 200, { ok: true, text, agent }, origin);
       } catch (e) {
         log(`INVOKE error client="${client.name}" agent=${agent}: ${e?.message || e}`);
-        send(res, 500, { error: e?.message || String(e) }, origin);
+        send(res, e?.status || 500, { error: e?.message || String(e) }, origin);
       }
       return;
     }
